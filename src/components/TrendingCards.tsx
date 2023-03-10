@@ -5,6 +5,7 @@ import themes from "../constants/themes";
 import { BASE_URI_BACK } from '../utils/config';
 import { CryptoState } from "../provider/CryotoProvider";
 import { IAssets } from "../models/types";
+import { filterCoins } from '../api/config';
 import { io } from "socket.io-client";
 import { numberWithCommas } from "../helpers/helper";
 
@@ -15,10 +16,20 @@ const TrendingCard = () => {
   useEffect(() => {
     const socket = io(BASE_URI_BACK);
     socket.on('connect', () => console.log(socket.id));
+
     socket.on('connect_error', () => {
       setTimeout(() => socket.connect(), 5000);
     });
-    socket.on('assets', (data) => setTrending(data));
+
+    socket.on('assets', (data) => setTrending(data.filter(
+      (coin: IAssets) => {
+        for (const item in filterCoins) {
+          if (coin.name.toLowerCase().includes(filterCoins[item].name))
+            return true;
+        }
+        return false;
+      })
+    ));
   });
 
   return (
@@ -99,8 +110,8 @@ const CardContainer = styled.div`
     flex-wrap: nowrap;
     overflow-x: auto;
     overflow-y: hidden;
-    scrollbar-width: none;
     gap: 10px;
+    justify-content: center;
 
     &::-webkit-scrollbar {
       display: none;
